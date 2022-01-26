@@ -1,0 +1,19 @@
+module org:protelis:tutorial:leader2
+
+import protelis:coord:spreading
+import protelis:lang:utils
+import org:protelis:tutorial:leader
+
+let myNeighbors = foldSum(nbr(1))
+localLeaderElectionWithGradient(
+    myNeighbors,
+	env.get("grain")
+) {
+    let mid = self.getDeviceUID().getId()
+    mux(mid == nbr(mid)) { 0 } else { nbr(myNeighbors) * myNeighbors }
+	// nbrRange()
+	/*
+	let diff = nbr(self.getCoordinates()) - self.getCoordinates()
+	hypot(diff.get(0), diff.get(1))
+	*/
+}

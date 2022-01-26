@@ -1,0 +1,19 @@
+incarnation: protelis
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [10]
+
+_gradient: &gradient
+  - time-distribution: 1
+    program: org:protelis:tutorial:leader
+  - program: send
+
+deployments:
+  type: Rectangle
+  parameters:
+    [1000, 0, 0, 100, 100]
+  programs: *gradient
+  contents:
+    molecule: grain
+    concentration: 2000

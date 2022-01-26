@@ -1,9 +1,5 @@
 incarnation: protelis
 
-network-model:
-  type: ConnectWithinDistance
-  parameters: [0.5]
-
 _gradient: &gradient
   - time-distribution: 1
     # Writing Protelis programs within a YAML file is a bad experience
@@ -16,12 +12,14 @@ _gradient: &gradient
   - program: send
 
 deployments:
-  type: Grid
-  parameters: [-5, -5, 5, 5, 0.25, 0.25, 0.1, 0.1]
-  contents:
-    - in:
-        type: Rectangle
-        parameters: [-6, -6, 2, 2]
-      molecule: source
-      concentration: true
+  type: GraphStreamDeployment
+  parameters:
+    nodeCount: 1000
+    offsetX: 0
+    offsetY: 0
+    zoom: 0.2
+    layoutQuality: 0.5
+    createLinks: true
+    generatorName: BarabasiAlbert
+    parameters: []
   programs: *gradient

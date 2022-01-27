@@ -4,11 +4,14 @@ import protelis:coord:spreading
 import protelis:lang:utils
 import org:protelis:tutorial:leader
 
+def maxOf(v) = foldMax(0.01, v)
+def maxOfNbr(v) = maxOf(nbr(v))
+
 let myNeighbors = foldSum(nbr(1))
 let valueLocal = env.get("layer")
 localLeaderElectionWithGradient(
     valueLocal,
 	env.get("grain")
 ) {
-    abs(valueLocal - nbr(valueLocal))
+    10 * abs(valueLocal - nbr(valueLocal)) / maxOfNbr(valueLocal) + nbrRange() / maxOf(nbrRange())
 }

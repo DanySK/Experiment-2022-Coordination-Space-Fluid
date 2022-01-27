@@ -6,12 +6,15 @@ import org:protelis:tutorial:leader
 
 def maxOf(v) = foldMax(0.01, v)
 def maxOfNbr(v) = maxOf(nbr(v))
+def bounded(v) = max(0.1, v)
 
 let myNeighbors = foldSum(nbr(1))
 let valueLocal = env.get("layer")
+let grain = env.get("grain")
+let id = self.getDeviceUID().getId()
 localLeaderElectionWithGradient(
-    valueLocal,
+    abs(foldMean(nbr(valueLocal)) - valueLocal),
 	env.get("grain")
 ) {
-    10 * abs(valueLocal - nbr(valueLocal)) / maxOfNbr(valueLocal) + nbrRange() / maxOf(nbrRange())
+    mux(id == nbr(id)) { 0 } else { bounded(abs(valueLocal - nbr(valueLocal))) * bounded(nbrRange()) }
 }

@@ -2,7 +2,7 @@ incarnation: protelis
 
 network-model:
   type: ConnectWithinDistance
-  parameters: [7]
+  parameters: [6]
 
 _gradient: &gradient
   - time-distribution: 1

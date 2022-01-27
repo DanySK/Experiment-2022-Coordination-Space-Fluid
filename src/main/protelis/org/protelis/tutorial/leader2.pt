@@ -5,15 +5,10 @@ import protelis:lang:utils
 import org:protelis:tutorial:leader
 
 let myNeighbors = foldSum(nbr(1))
+let valueLocal = env.get("layer")
 localLeaderElectionWithGradient(
-    myNeighbors,
+    valueLocal,
 	env.get("grain")
 ) {
-    let mid = self.getDeviceUID().getId()
-    mux(mid == nbr(mid)) { 0 } else { nbr(myNeighbors) * myNeighbors }
-	// nbrRange()
-	/*
-	let diff = nbr(self.getCoordinates()) - self.getCoordinates()
-	hypot(diff.get(0), diff.get(1))
-	*/
+    abs(valueLocal - nbr(valueLocal))
 }

@@ -1,0 +1,20 @@
+module org:protelis:tutorial:leader2
+
+import protelis:coord:spreading
+import protelis:lang:utils
+import org:protelis:tutorial:leader
+
+def maxOf(v) = foldMax(0.01, v)
+def maxOfNbr(v) = maxOf(nbr(v))
+def bounded(v) = max(0.1, v)
+
+let myNeighbors = foldSum(nbr(1))
+let valueLocal = env.get("layer")
+let grain = env.get("grain")
+let id = self.getDeviceUID().getId()
+localLeaderElectionWithGradient(
+    abs(foldMean(nbr(valueLocal)) - valueLocal),
+	env.get("grain")
+) {
+    mux(id == nbr(id)) { 0 } else { bounded(abs(valueLocal - nbr(valueLocal))) * bounded(nbrRange()) }
+}

@@ -1,22 +1,72 @@
 incarnation: protelis
 
+variables:
+  base:
+    language: kotlin
+    timeout: 10000
+    formula: |
+      mapOf(
+        "programs" to listOf(
+          mapOf("time-distribution" to 1, "program" to "org:protelis:tutorial:complete"),
+          mapOf("program" to "send"),
+        ),
+        "contents" to mapOf(
+          "molecule" to "grain",
+          "concentration" to 5,
+        )
+      )
+  arena_size:
+    formula: 32.0
+  expected_neighbors:
+    formula: 8.0
+  node_count:
+    formula: arena_size*arena_size
+    language: kotlin
+  range: &range
+    formula:
+      Math.sqrt(expected_neighbors * arena_size * arena_size / node_count / Math.PI)
+  rectangle: &rectangle
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "Rectangle",
+        "parameters" to listOf(node_count, 0, 0, arena_size, arena_size),
+      )
+  regular_grid: &regular_grid
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "Grid",
+        "parameters" to mapOf(
+          "xStart" to 0,
+          "yStart" to 0,
+          "xEnd" to arena_size,
+          "yEnd" to arena_size,
+          "xStep" to 1,
+          "yStep" to 1,
+        ),
+      )
+  deployment:
+    type: ArbitraryVariable
+    parameters: [grid, [grid, rect]]
+  deployment_spec: &deployment_spec
+    formula: |
+      def specs = [
+        "grid": regular_grid,
+        "rect": rectangle,
+      ]
+      specs[deployment]
+
 network-model:
   type: ConnectWithinDistance
-  parameters: [6]
+  parameters: [*range]
 
 _gradient: &gradient
   - time-distribution: 1
     program: org:protelis:tutorial:leader2
   - program: send
 
-deployments:
-  type: Rectangle
-  parameters:
-    [1000, 0, 0, 100, 100]
-  programs: *gradient
-  contents:
-    molecule: grain
-    concentration: 5
+deployments: *deployment_spec
 
 layers:
   - molecule: layer

@@ -67,7 +67,7 @@ val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().cont
     14 * 1024L
 }
 val taskSizeFromProject: Int? by project
-val taskSize = taskSizeFromProject ?: 512
+val taskSize = taskSizeFromProject ?: 5000
 val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
 
 val alchemistGroup = "Run Alchemist"
@@ -118,7 +118,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             args(
                 "-e", "data/${it.nameWithoutExtension}",
                 "-b",
-                "-var", "seed", "speed", "meanNeighbors", "nodeCount",
+                "-var", "seed", "deployment",
                 "-p", threadCount,
                 "-i", 1
             )

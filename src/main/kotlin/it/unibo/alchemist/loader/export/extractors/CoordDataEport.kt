@@ -17,7 +17,7 @@ data class Bubble(val leader: Int, val statMolecule: String, val nodes: List<Nod
 
     val values by lazy { nodes.map { it.getConcentration(SimpleMolecule(statMolecule)).numeric<Double>() }.toDoubleArray() }
 
-    inline fun <reified S : UnivariateStatistic> stat(molecule: String): Double = values.stat<S>()
+    inline fun <reified S : UnivariateStatistic> stat(): Double = values.stat<S>()
 }
 
 data class Bubbles(val bubbles: List<Bubble>) {
@@ -32,8 +32,8 @@ data class Bubbles(val bubbles: List<Bubble>) {
             .mapNotNull { (leader, nodes) -> leader?.let { Bubble(leader, statMolecule, nodes) } }
     )
 
-    inline fun <reified Inner : UnivariateStatistic, reified Outer : UnivariateStatistic> statOfStat(molecule: String) =
-        bubbles.map { it.stat<Inner>(molecule) }.stat<Outer>()
+    inline fun <reified Inner : UnivariateStatistic, reified Outer : UnivariateStatistic> statOfStat() =
+        bubbles.map { it.stat<Inner>() }.stat<Outer>()
 }
 
 class CoordDataEport : Extractor<Double> {
@@ -49,11 +49,11 @@ class CoordDataEport : Extractor<Double> {
             val target = "$source-$name"
             val bubbles: Bubbles = Bubbles(environment, target, source)
             listOf(
-                "$target-intra-stdev-mean" to bubbles.statOfStat<StandardDeviation, Mean>(source),
-                "$target-intra-stdev-stdev" to bubbles.statOfStat<StandardDeviation, StandardDeviation>(source),
-                "$target-intra-stdev-max" to bubbles.statOfStat<StandardDeviation, Max>(source),
-                "$target-intra-stdev-min" to bubbles.statOfStat<StandardDeviation, Min>(source),
-                "$target-inter-mean-stdev" to bubbles.statOfStat<Mean, StandardDeviation>(source),
+                "$target-intra-stdev-mean" to bubbles.statOfStat<StandardDeviation, Mean>(),
+                "$target-intra-stdev-stdev" to bubbles.statOfStat<StandardDeviation, StandardDeviation>(),
+                "$target-intra-stdev-max" to bubbles.statOfStat<StandardDeviation, Max>(),
+                "$target-intra-stdev-min" to bubbles.statOfStat<StandardDeviation, Min>(),
+                "$target-inter-mean-stdev" to bubbles.statOfStat<Mean, StandardDeviation>(),
                 "$target-bubble-count" to bubbles.bubbles.size.toDouble(),
                 "$target-inter-mean-stdev" to bubbles.bubbles.size.toDouble(),
             )
@@ -61,7 +61,7 @@ class CoordDataEport : Extractor<Double> {
     }.toMap()
 
     companion object {
-        val sources = listOf("bivariate", "constant", "multi", "uniform")
+        val sources = listOf("bivariate", "constant", "multi", "uniform", "dynamic")
         val names = listOf("mean", "value", "variance").flatMap { lead ->
             listOf("combined", "distance", "valuediff").map { metric ->
                 "$lead-$metric"

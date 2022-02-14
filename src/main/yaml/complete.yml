@@ -81,7 +81,7 @@ variables:
       )
   deployment:
     type: ArbitraryVariable
-    parameters: [exp, [grid, rect, pgrid, exp]]
+    parameters: [exp, [grid, uniform, pgrid, exp]]
   deployment_spec: &deployment_spec
     formula: |
       def specs = [
@@ -127,3 +127,7 @@ export:
     data:
       - time
       - type: CoordDataEport
+
+terminate:
+  - type: AfterTime
+    parameters: 600

@@ -18,11 +18,16 @@ let distanceMetrics = [
 	["valuediff", { v -> mux(id == nbr(id)) { 0 } else { bounded(abs(v - nbr(v))) } }],
 	["combined", { v -> mux(id == nbr(id)) { 0 } else { bounded(abs(v - nbr(v))) * bounded(nbrRange()) } }]
 ]
+let time = self.getCurrentTime()
 let values = [
 	["constant", constant()],
 	["uniform", uniform()],
 	["bivariate", bivariate()],
-	["multi", multiBivariate()]
+	["multi", multiBivariate()],
+    ["dynamic", if (time < 150) { constant() } else {
+                if (time < 300) { uniform() } else {
+                if (time < 450) { bivariate() } else { multiBivariate() }
+                } } ]
 ]
 values.map { env.put(it.get(0), it.get(1)) }
 let leads = [

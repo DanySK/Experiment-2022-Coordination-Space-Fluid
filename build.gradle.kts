@@ -61,13 +61,13 @@ val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().cont
             standardOutput = output
         }
         output.toString().trim().toLong() / 1024
-    }.also { println("Detected ${it}MB RAM available.") } * 9 / 10
+    }.also { println("Detected ${it}MB RAM available.") }
 } else {
     // Guess 16GB RAM of which 2 used by the OS
     14 * 1024L
 }
 val taskSizeFromProject: Int? by project
-val taskSize = taskSizeFromProject ?: 5000
+val taskSize = taskSizeFromProject ?: 6000
 val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
 
 val alchemistGroup = "Run Alchemist"
@@ -112,8 +112,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
         runAllGraphic.dependsOn(graphic)
         val batch by basetask("run${capitalizedName}Batch") {
             description = "Launches batch experiments for $capitalizedName"
-            jvmArgs("-XX:+AggressiveHeap")
-            maxHeapSize = "${minOf(heap.toInt(), Runtime.getRuntime().availableProcessors() * taskSize)}m"
+            maxHeapSize = "${(heap * 0.85).toInt()}m"
             File("data").mkdirs()
             args(
                 "-e", "data/${it.nameWithoutExtension}",

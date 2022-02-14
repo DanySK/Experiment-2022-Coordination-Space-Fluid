@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -162,4 +163,19 @@ public final class JavaInteroperabilityUtils {
         }
         throw new IllegalArgumentException("Reducing function must take two parameters.");
     }
+
+    public static <R> Function<Object, R> toFunction(ExecutionContext ctx, FunctionDefinition fun) {
+        if (fun.getParameterCount() <= 1) {
+            final AtomicInteger counter = new AtomicInteger();
+            return (argument) -> {
+                final List<ProtelisAST<?>> arguments = ImmutableList.of(
+                    new Constant<>(JavaInteroperabilityUtils.METADATA, argument)
+                );
+                final FunctionCall call = new FunctionCall(JavaInteroperabilityUtils.METADATA, fun, arguments);
+                return (R) ctx.runInNewStackFrame(counter.getAndIncrement(), call::eval);
+            };
+        }
+        throw new IllegalArgumentException("Reducing function must take two parameters.");
+    }
+
 }

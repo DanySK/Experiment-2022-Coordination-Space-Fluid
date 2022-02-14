@@ -140,7 +140,7 @@
     "molFilter": true,
     "molString": "org:protelis:tutorial:leader2",
     "molPropertyFilter": true,
-    "property": "\u003cvalue\u003e % 17",
+    "property": "\u003cvalue\u003e ",
     "writingPropertyValue": false,
     "c": "HUE",
     "reverse": false,

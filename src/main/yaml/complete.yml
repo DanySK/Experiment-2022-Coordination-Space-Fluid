@@ -18,14 +18,14 @@ variables:
   arena_size:
     formula: 32.0
   expected_neighbors:
-    formula: 8.0
-  node_count:
+    formula: 12.0
+  node_count: &node_count
     formula: arena_size*arena_size
     language: kotlin
   range: &range
     formula:
       Math.sqrt(expected_neighbors * arena_size * arena_size / node_count / Math.PI)
-  rectangle: &rectangle
+  uniform: &rectangle
     language: kotlin
     formula: |
       base + mapOf(
@@ -62,15 +62,33 @@ variables:
           "yRand" to 0.5,
         ),
       )
+  exponential:
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "GeometricGradientRectangle",
+        "parameters" to listOf(
+          node_count, // final int nodes,
+          0, // final double x,
+          0, //  final double y,
+          arena_size, // final double sizex,
+          arena_size, // final double sizey,
+          0.3, // final double lambda,
+          100, // final int steps,
+          true, // final boolean horizontal,
+          true, // final boolean increasing
+        ),
+      )
   deployment:
     type: ArbitraryVariable
-    parameters: [pgrid, [grid, rect, pgrid]]
+    parameters: [exp, [grid, rect, pgrid, exp]]
   deployment_spec: &deployment_spec
     formula: |
       def specs = [
+        "exp": exponential,
         "grid": regular_grid,
         "pgrid": irregular_grid,
-        "rect": rectangle,
+        "uniform": uniform,
       ]
       specs[deployment]
   seed:
@@ -90,8 +108,8 @@ seeds:
   simulation: *simseed
 
 network-model:
-  type: ConnectWithinDistance
-  parameters: [*range]
+  type: ClosestN
+  parameters: [8, *node_count]
 
 _gradient: &gradient
   - time-distribution: 1
@@ -99,15 +117,3 @@ _gradient: &gradient
   - program: send
 
 deployments: *deployment_spec
-
-layers:
-  - molecule: layer
-    type: BidimensionalGaussianLayer
-    parameters:
-      baseline: 0
-      centerX: 30
-      centerY: 30
-      norm: 30
-      sigmaX: &sigma
-        15
-      sigmaY: *sigma

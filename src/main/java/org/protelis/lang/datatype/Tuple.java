@@ -74,6 +74,12 @@ public interface Tuple extends Iterable<Object>, Serializable, Comparable<Tuple>
      */
     Tuple filter(Predicate<Object> fun);
 
+    default Tuple flatMap(ExecutionContext ctx, FunctionDefinition fun) {
+        return flatMap(JavaInteroperabilityUtils.toFunction(ctx, fun));
+    }
+
+    Tuple flatMap(Function<Object, Tuple> fun);
+
     /**
      * Performs a reduction operation, that maps a tuple to a single value.
      *

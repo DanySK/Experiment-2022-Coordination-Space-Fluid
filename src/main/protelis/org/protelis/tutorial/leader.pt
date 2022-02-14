@@ -24,8 +24,8 @@ def tieBreakerOf(tuple) = [tuple.get(1).get(0), tuple.get(0)]
  */
 public def localLeaderElection(uid, symmetryBreaker, radius, metric, distance) {
 	let default = [uid, [symmetryBreaker, 0]]
-    env.put("default", default)
-    env.putField("metric", metric())
+    //env.put("default", default)
+    //env.putField("metric", metric())
 	share (lead, nbrLead <- default) {
 		let sources = [nbrLead]
         env.putField("debug", sources)
@@ -42,9 +42,9 @@ public def localLeaderElection(uid, symmetryBreaker, radius, metric, distance) {
 			},
 			[NEGATIVE_INFINITY, POSITIVE_INFINITY]
 		)
-        env.put("distances", distances)
+        //env.put("distances", distances)
 		let closeEnough = distances.filter { distanceOf(it) < radius }
-        env.put("closeEnough", closeEnough)
+        //env.put("closeEnough", closeEnough)
 		let best = closeEnough.fold(default) { a, b ->
 			if (tieBreakerOf(a) > tieBreakerOf(b)) { a } else { b }
 		}

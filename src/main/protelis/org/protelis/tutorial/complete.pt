@@ -3,18 +3,61 @@ module org:protelis:tutorial:leader2
 import protelis:coord:spreading
 import protelis:lang:utils
 import org:protelis:tutorial:leader
+import spacefluid.SpaceFluid.*
 
 def maxOf(v) = foldMax(0.01, v)
 def maxOfNbr(v) = maxOf(nbr(v))
-def bounded(v) = max(0.1, v)
+def bounded(v) = max(0.01, v)
+def uniform() = rep(x <- self.nextRandomDouble() * 100) { x }
+def nbrMean(v) = foldMean(nbr(v))
+def nbrVariance(v) = foldMean((nbrMean(v) - nbr(v))^2)
 
-let myNeighbors = foldSum(nbr(1))
-let valueLocal = env.get("layer")
-let grain = env.get("grain")
 let id = self.getDeviceUID().getId()
-localLeaderElectionWithGradient(
-    abs(foldMean(nbr(valueLocal)) - valueLocal),
-	env.get("grain")
-) {
-    mux(id == nbr(id)) { 0 } else { bounded(abs(valueLocal - nbr(valueLocal))) * bounded(nbrRange()) }
+let distanceMetrics = [
+	["distance", { v -> nbrRange() }],
+	["valuediff", { v -> mux(id == nbr(id)) { 0 } else { bounded(abs(v - nbr(v))) } }],
+	["combined", { v -> mux(id == nbr(id)) { 0 } else { bounded(abs(v - nbr(v))) * bounded(nbrRange()) } }]
+]
+let values = [
+	["constant", constant()],
+	["uniform", uniform()],
+	["bivariate", bivariate()],
+	["multi", multiBivariate()]
+]
+let leads = [
+	["variance", nbrVariance],
+	["value", { v -> v }],
+	["mean", nbrMean]
+]
+values.flatMap { value ->
+	let valueName = value.get(0)
+	let v = value.get(1)
+	leads.flatMap { lead ->
+		let leadName = lead.get(0)
+		let leadValue = lead.get(1)(v)
+		distanceMetrics.map { dMetric ->
+			let metricName = dMetric.get(0)
+			let metric = dMetric.get(1)(v)
+			let entryName = valueName + "-" + leadName + "-" + dMetric.get(0)
+			let localLeader = localLeaderElectionWithGradient(leadValue, env.get("grain")) { metric }
+			env.put(entryName, localLeader)
+			[entryName, localLeader]
+		}
+	}
 }
+/*
+.map {
+	let name = it.get(0)
+	let value = it.get(1)
+	env.put(name, value)
+	let myNeighbors = foldSum(nbr(1))
+	let grain = env.get("grain")
+	let id = self.getDeviceUID().getId()
+	localLeaderElectionWithGradient(
+		abs(foldMean(nbr(valueLocal)) - valueLocal),
+		env.get("grain")
+	) {
+		mux(id == nbr(id)) { 0 } else { bounded(abs(valueLocal - nbr(valueLocal))) * bounded(nbrRange()) }
+	}
+}
+*/

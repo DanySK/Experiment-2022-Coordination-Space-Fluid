@@ -48,26 +48,35 @@ class CoordDataEport : Extractor<Double> {
         sources.flatMap { source ->
             val target = "$source-$name"
             val bubbles: Bubbles = Bubbles(environment, target, source)
-            listOf(
-                "$target-intra-stdev-mean" to bubbles.statOfStat<StandardDeviation, Mean>(),
-                "$target-intra-stdev-stdev" to bubbles.statOfStat<StandardDeviation, StandardDeviation>(),
-                "$target-intra-stdev-max" to bubbles.statOfStat<StandardDeviation, Max>(),
-                "$target-intra-stdev-min" to bubbles.statOfStat<StandardDeviation, Min>(),
-                "$target-inter-mean-stdev" to bubbles.statOfStat<Mean, StandardDeviation>(),
-                "$target-bubble-count" to bubbles.bubbles.size.toDouble(),
-                "$target-inter-mean-stdev" to bubbles.bubbles.size.toDouble(),
-            )
+            measures.entries.map { (measure, statistic) ->
+                "$target-$measure" to bubbles.statistic()
+            }
         }
     }.toMap()
 
     companion object {
+        val measures = mapOf<String, Bubbles.() -> Double>(
+            "intra-stdev-mean" to { statOfStat<StandardDeviation, Mean>() },
+            "intra-stdev-stdev" to { statOfStat<StandardDeviation, StandardDeviation>() },
+            "intra-stdev-max" to { statOfStat<StandardDeviation, Max>() },
+            "intra-stdev-min" to { statOfStat<StandardDeviation, Min>() },
+            "inter-mean-stdev" to { statOfStat<Mean, StandardDeviation>() },
+            "bubble-count" to { bubbles.size.toDouble() },
+            "bubble-size-mean" to { bubbles.map { it.nodes.size.toDouble() }.stat<Mean>() },
+        )
         val sources = listOf("bivariate", "constant", "multi", "uniform", "dynamic")
         val names = listOf("mean", "value", "variance").flatMap { lead ->
             listOf("combined", "distance", "valuediff").map { metric ->
                 "$lead-$metric"
             }
         }
-        val completeNames = sources.flatMap { source -> names.map { "$source-$it" } }
+        val completeNames = sources.flatMap { source ->
+            names.flatMap { name ->
+                measures.keys.map { measure ->
+                    "$source-$name-$measure"
+                }
+            }
+        }
     }
 }
 

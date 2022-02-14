@@ -117,3 +117,13 @@ _gradient: &gradient
   - program: send
 
 deployments: *deployment_spec
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "coord"
+      exportPath: "data"
+      interval: 1
+    data:
+      - time
+      - type: CoordDataEport

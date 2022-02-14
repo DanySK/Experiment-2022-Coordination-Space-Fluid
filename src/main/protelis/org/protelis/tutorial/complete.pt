@@ -24,6 +24,7 @@ let values = [
 	["bivariate", bivariate()],
 	["multi", multiBivariate()]
 ]
+values.map { env.put(it.get(0), it.get(1)) }
 let leads = [
 	["variance", nbrVariance],
 	["value", { v -> v }],

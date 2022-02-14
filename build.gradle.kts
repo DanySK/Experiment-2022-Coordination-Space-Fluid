@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.awt.GraphicsEnvironment
 import java.io.ByteArrayOutputStream
 
@@ -34,6 +35,12 @@ val usesJvm: Int = File(File(projectDir, "util"), "Dockerfile")
 
 multiJvm {
     jvmVersionForCompilation.set(usesJvm)
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjvm-default=all")
+    }
 }
 
 dependencies {
@@ -85,7 +92,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
         fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
             group = alchemistGroup
             description = "Launches graphic simulation ${it.nameWithoutExtension}"
-            main = "it.unibo.alchemist.Alchemist"
+            mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
             args("-y", it.absolutePath)
             if (System.getenv("CI") == "true") {

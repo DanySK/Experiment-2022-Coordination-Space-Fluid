@@ -3,6 +3,7 @@ import xarray as xr
 import re
 from pathlib import Path
 import collections
+import itertools
 
 def distance(val, ref):
     return abs(ref - val)
@@ -88,7 +89,7 @@ def extractCoordinates(filename):
     """
     with open(filename, 'r') as file:
 #        regex = re.compile(' (?P<varName>[a-zA-Z._-]+) = (?P<varValue>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),?')
-        regex = r"(?P<varName>[a-zA-Z._-]+) = (?P<varValue>[^,]*),?"
+        regex = r"(?:^|_)\s*(?P<varName>[^-\s]+)-(?P<varValue>[^_\s]*)"
         dataBegin = r"\d"
         is_float = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
         for line in file:
@@ -175,22 +176,59 @@ def beautifyValue(v):
     except:
         return v
 
+def reprocess(dataset):
+    original_vars = list(dataset.data_vars)
+    matched_vars = list(map(lambda x: re.match(r'^(\w+)-(\w+)-(\w+)-(.*)$', x).groups(), original_vars))
+    additional_coords = ('datasource', 'leader selection', 'metric')
+    old_coords = {k: list(v.values) for k, v in dataset.coords.items()}
+    new_coords = { name: list(set(map(lambda tup: tup[additional_coords.index(name)], matched_vars))) for name in additional_coords }
+    all_coords = new_coords | old_coords
+    new_dataset = xr.Dataset(coords = all_coords)
+    shape = list(new_dataset.sizes.values())
+    measures = { x[-1] for x in matched_vars }
+    for measure in measures:
+        data = np.array([dataset.sel({'deployment': deployment, 'time': time})[f'{datasource}-{leader_selection}-{metric}-{measure}']
+             for datasource in new_dataset.coords['datasource'].values
+             for leader_selection in new_dataset.coords['leader selection'].values
+             for metric in new_dataset.coords['metric'].values
+             for deployment in new_dataset.coords['deployment'].values
+             for time in new_dataset.coords['time'].values
+        ])
+        new_dataset[measure] = (all_coords.keys(), data.reshape(shape))
+    # for name, values in (new_coords | old_coords).items():
+    #     new_dataset.coords[name] = values
+    # index = 0
+    # for datasource, leader_selection, metric, measure in matched_vars:
+    #     for deployment, time in itertools.product(*old_coords.values()):
+    #         new_dataset.sel({
+    #             'datasource' : datasource,
+    #             'leader selection': leader_selection,
+    #             'metric': metric,
+    #             'deployment': deployment,
+    #             'time': time,
+    #         })[measure] = dataset.sel({'deployment': deployment, 'time': time})[f'{datasource}-{leader_selection}-{metric}-{measure}']
+    #     index += 1
+    #     print(f"{index}/{len(matched_vars)}")
+    return new_dataset
+
 if __name__ == '__main__':
     # CONFIGURE SCRIPT
     # Where to find Alchemist data files
     directory = 'data'
     # Where to save charts
     output_directory = 'charts'
+    # File extension
+    extension = 'csv'
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
-    experiments = ['simulation']
+    experiments = ['coord']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
-    timeSamples = 100
+    timeSamples = 50
     # time management
     minTime = 0
-    maxTime = 50
+    maxTime = 600
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
@@ -274,7 +312,7 @@ if __name__ == '__main__':
             for experiment in experiments:
                 # Collect all files for the experiment of interest
                 import fnmatch
-                allfiles = filter(lambda file: fnmatch.fnmatch(file, experiment + '_*.txt'), os.listdir(directory))
+                allfiles = filter(lambda file: fnmatch.fnmatch(file, experiment + f'*_*.{extension}'), os.listdir(directory))
                 allfiles = [directory + '/' + name for name in allfiles]
                 allfiles.sort()
                 # From the file name, extract the independent variables
@@ -329,8 +367,9 @@ if __name__ == '__main__':
                                 darray.loc[experimentVars] = data[:, idx].A1
                     # Fold the dataset along the seed variables, producing the mean and stdev datasets
                     mergingVariables = [seed for seed in seedVars if seed in dataset.coords]
-                    means[experiment] = dataset.mean(dim = mergingVariables, skipna=True)
-                    stdevs[experiment] = dataset.std(dim = mergingVariables, skipna=True)
+                    means[experiment] = reprocess(dataset.mean(dim = mergingVariables, skipna=True))
+                    stdevs[experiment] = reprocess(dataset.std(dim = mergingVariables, skipna=True))
+
             # Save the datasets
             pickle.dump(means, open(pickleOutput + '_mean', 'wb'), protocol=-1)
             pickle.dump(stdevs, open(pickleOutput + '_std', 'wb'), protocol=-1)
@@ -364,6 +403,7 @@ if __name__ == '__main__':
                 ax.plot(xdata, data+error, label=None, color=last_color, linewidth=errlinewidth)
                 ax.plot(xdata, data-error, label=None, color=last_color, linewidth=errlinewidth)
         return (fig, ax)
+
     def generate_all_charts(means, errors = None, basedir=''):
         viable_coords = { coord for coord in means.coords if means[coord].size > 1 }
         for comparison_variable in viable_coords - {timeColumnName}:
@@ -401,9 +441,43 @@ if __name__ == '__main__':
                                 figname = figname.replace(symbol, '_')
                             fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
                             plt.close(fig)
+                merge_variables = mergeable_variables - { current_coordinate }
+                merge_data_view = means.mean(dim = merge_variables, skipna = True)
+                merge_error_view = errors.mean(dim = merge_variables, skipna = True)
+                for current_coordinate_value in merge_data_view[current_coordinate].values:
+                    beautified_value = beautifyValue(current_coordinate_value)
+                    for current_metric in merge_data_view.data_vars:
+                        title = f'{label_for(current_metric)} for diverse {label_for(comparison_variable)} when {label_for(current_coordinate)}={beautified_value}'
+                        for withErrors in [True, False]:
+                            fig, ax = make_line_chart(
+                                title = title,
+                                xdata = merge_data_view[timeColumnName],
+                                xlabel = unit_for(timeColumnName),
+                                ylabel = unit_for(current_metric),
+                                ydata = {
+                                    beautifyValue(label): (
+                                        merge_data_view.sel(selector)[current_metric],
+                                        merge_error_view.sel(selector)[current_metric] if withErrors else 0
+                                    )
+                                    for label in merge_data_view[comparison_variable].values
+                                    for selector in [{comparison_variable: label, current_coordinate: current_coordinate_value}]
+                                },
+                            )
+                            ax.set_xlim(minTime, maxTime)
+                            ax.legend()
+                            fig.tight_layout()
+                            by_time_output_directory = f'{output_directory}/{basedir}/{comparison_variable}'
+                            Path(by_time_output_directory).mkdir(parents=True, exist_ok=True)
+                            figname = f'{comparison_variable}_{current_metric}_{current_coordinate}_{beautified_value}{"_err" if withErrors else ""}'
+                            for symbol in r".[]\/@:":
+                                figname = figname.replace(symbol, '_')
+                            fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
+                            plt.close(fig)
+
     for experiment in experiments:
         current_experiment_means = means[experiment]
         current_experiment_errors = stdevs[experiment]
         generate_all_charts(current_experiment_means, current_experiment_errors, basedir = f'{experiment}/all')
         
 # Custom charting
+

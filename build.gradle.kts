@@ -67,7 +67,7 @@ val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().cont
     14 * 1024L
 }
 val taskSizeFromProject: Int? by project
-val taskSize = taskSizeFromProject ?: 6000
+val taskSize = taskSizeFromProject ?: 8000
 val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
 
 val alchemistGroup = "Run Alchemist"

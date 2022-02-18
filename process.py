@@ -268,15 +268,15 @@ if __name__ == '__main__':
         return r'\|' + x + r'\|'
 
     labels = {
-        'nodeCount': Measure(r'$n$', 'nodes'),
-        'harmonicCentrality[Mean]': Measure(f'${expected("H(x)")}$'),
-        'meanNeighbors': Measure(f'${expected(cardinality("N"))}$', 'nodes'),
-        'speed': Measure(r'$\|\vec{v}\|$', r'$m/s$'),
-        'msqer@harmonicCentrality[Max]': Measure(r'$\max{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Min]': Measure(r'$\min{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Mean]': Measure(f'${expected(mse(centrality_label))}$'),
-        'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
-        'org:protelis:armonicCentralityHLL[Mean]': Measure(f'${expected(centrality_label)}$'),
+        'bubble-count': Measure(r'$|R|$', 'regions'),
+        'bubble-size-mean': Measure(r'$\mu_R$', 'devices'),
+        'datasource': Measure('phenomena'),
+        'deployment': Measure('scenario'),
+        'intra-stdev-stdev': Measure(r'$\sigma(\sigma_s)$', 'signal unit'),
+        'intra-stdev-mean': Measure(r'$\mu(\sigma_s)$', 'signal unit'),
+        'inter-mean-stdev': Measure(r'$\sigma(\mu_s)$', 'signal unit'),
+        'bivariate': Measure(r'gauss'),
+        'multi': Measure(r'multi-gauss'),
     }
     def derivativeOrMeasure(variable_name):
         if variable_name.endswith('dt'):

@@ -52,6 +52,7 @@ dependencies {
 }
 
 // Heap size estimation for batches
+val isCI = System.getenv("CI") == "true"
 val maxHeap: Long? by project
 val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().contains("linux")) {
     ByteArrayOutputStream().use { output ->
@@ -67,7 +68,8 @@ val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().cont
     14 * 1024L
 }
 val taskSizeFromProject: Int? by project
-val taskSize = taskSizeFromProject ?: 8000
+val taskSize = (taskSizeFromProject ?: 8000)
+    .takeUnless { isCI } ?: 2000 // CI Servers run a simplified version of the simulation
 val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
 
 val alchemistGroup = "Run Alchemist"
@@ -95,7 +97,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
             args("-y", it.absolutePath)
-            if (System.getenv("CI") == "true") {
+            if (isCI) {
                 args("-hl", "-t", "2")
             } else {
                 args("-g", "effects/${it.nameWithoutExtension}.json")

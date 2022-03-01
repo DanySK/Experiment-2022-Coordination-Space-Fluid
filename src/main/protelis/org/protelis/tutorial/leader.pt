@@ -42,9 +42,9 @@ public def localLeaderElection(uid, symmetryBreaker, radius, metric, distance) {
 			},
 			[NEGATIVE_INFINITY, POSITIVE_INFINITY]
 		)
-        //env.put("distances", distances)
+		//env.put("distances", distances)
 		let closeEnough = distances.filter { distanceOf(it) < radius }
-        //env.put("closeEnough", closeEnough)
+		//env.put("closeEnough", closeEnough)
 		let best = closeEnough.fold(default) { a, b ->
 			if (tieBreakerOf(a) > tieBreakerOf(b)) { a } else { b }
 		}

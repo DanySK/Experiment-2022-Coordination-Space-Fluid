@@ -69,7 +69,7 @@ val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().cont
 }
 val taskSizeFromProject: Int? by project
 val taskSize = (taskSizeFromProject ?: 8000)
-    .takeUnless { isCI } ?: 2000 // CI Servers run a simplified version of the simulation
+    .takeUnless { isCI } ?: 1000 // CI Servers run a simplified version of the simulation
 val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
 
 val alchemistGroup = "Run Alchemist"

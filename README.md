@@ -1,6 +1,10 @@
 # Space-fluid Adaptive Sampling: a Field-based, Self-organising Approach
 
-This repository contains the experiments presented in the paper "Space-fluid Adaptive Sampling: a Field-based, Self-organising Approach",
+This repository contains the experiments presented in the paper 
+
+> Space-fluid Adaptive Sampling: a Field-based, Self-organising Approach
+
+Accepted at [COORDINATION 2022](http://www.discotec.org/2022/coordination.html)
 realised with the [Protelis programming language](https://www.protelis.org) and the [Alchemist Simulator](https://github.com/AlchemistSimulator/Alchemist).
 
 ## Prerequisites

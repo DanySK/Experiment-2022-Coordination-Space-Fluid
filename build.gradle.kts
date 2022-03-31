@@ -57,7 +57,7 @@ val maxHeap: Long? by project
 val heap: Long = maxHeap ?: if (System.getProperty("os.name").toLowerCase().contains("linux")) {
     ByteArrayOutputStream().use { output ->
         exec {
-            executable = "bash"
+            executable = "sh"
             args = listOf("-c", "cat /proc/meminfo | grep MemAvailable | grep -o '[0-9]*'")
             standardOutput = output
         }

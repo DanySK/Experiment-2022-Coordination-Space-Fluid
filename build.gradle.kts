@@ -110,7 +110,9 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             this.additionalConfiguration()
         }
         val capitalizedName = it.nameWithoutExtension.capitalize()
-        val graphic by basetask("run${capitalizedName}Graphic")
+        val graphic by basetask("run${capitalizedName}Graphic") {
+            if (isCI) maxHeapSize = "3g"
+        }
         runAllGraphic.dependsOn(graphic)
         val batch by basetask("run${capitalizedName}Batch") {
             description = "Launches batch experiments for $capitalizedName"

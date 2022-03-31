@@ -54,7 +54,18 @@ data will be generated into the `data` folder
 ## Re-generating the charts from the paper
 
 If you are just willing to re-run the data analysis and generate all the charts in the paper (plus hundreds other),
-you can use the data we generated in the past:
+you can use the data we generated in the past.
+
+If you do not have a compatible version of Python 3 onboard, consider using [pyenv](https://github.com/pyenv/pyenv).
+Assuming a Linux/MacOS environment, it can be installed with [pyenv-installer](https://github.com/pyenv/pyenv-installer) as follows:
+```bash
+curl https://pyenv.run | bash
+exec $SHELL
+pyenv install
+```
+
+Otherwise, follow the instructions of pyenv and pyenv-installer,
+or install Python 3.10.2 or above (with pip), and then run:
 
 ```bash
 pip install --upgrade pip --user

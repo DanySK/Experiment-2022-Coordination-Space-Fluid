@@ -176,23 +176,38 @@ def beautifyValue(v):
     except:
         return v
 
+global reprocess_i
+
 def reprocess(dataset):
+    print(f"Reprocessing dataset {dataset}")
     original_vars = list(dataset.data_vars)
     matched_vars = list(map(lambda x: re.match(r'^(\w+)-(\w+)-(\w+)-(.*)$', x).groups(), original_vars))
     additional_coords = ('datasource', 'leader selection', 'metric')
     old_coords = {k: list(v.values) for k, v in dataset.coords.items()}
     new_coords = { name: list(set(map(lambda tup: tup[additional_coords.index(name)], matched_vars))) for name in additional_coords }
+    print(f"Reshaping to: {new_coords}")
     all_coords = new_coords | old_coords
     new_dataset = xr.Dataset(coords = all_coords)
     shape = list(new_dataset.sizes.values())
+    print(f"Reshaped dataset: {new_dataset}")
     measures = { x[-1] for x in matched_vars }
+    print(f"Measures: {measures}")
+    size = np.prod([len(new_dataset.coords[label].values) for label in ['datasource', 'leader selection', 'metric', 'deployment', 'time']]) * len(measures)
+    global reprocess_i
+    reprocess_i = 0
     for measure in measures:
-        data = np.array([dataset.sel({'deployment': deployment, 'time': time})[f'{datasource}-{leader_selection}-{metric}-{measure}']
-             for datasource in new_dataset.coords['datasource'].values
-             for leader_selection in new_dataset.coords['leader selection'].values
-             for metric in new_dataset.coords['metric'].values
-             for deployment in new_dataset.coords['deployment'].values
-             for time in new_dataset.coords['time'].values
+        def progress(deployment, time, datasource, leader_selection, metric, measure):
+            global reprocess_i
+            reprocess_i += 1
+            if (reprocess_i % 100 == 0):
+                print(f"Reshaping in progress: ({reprocess_i}/{size})", end='\r', flush=True)
+            return dataset.sel({'deployment': deployment, 'time': time})[f'{datasource}-{leader_selection}-{metric}-{measure}']
+        data = np.array([progress(deployment, time, datasource, leader_selection, metric, measure)
+            for datasource in new_dataset.coords['datasource'].values
+            for leader_selection in new_dataset.coords['leader selection'].values
+            for metric in new_dataset.coords['metric'].values
+            for deployment in new_dataset.coords['deployment'].values
+            for time in new_dataset.coords['time'].values
         ])
         new_dataset[measure] = (all_coords.keys(), data.reshape(shape))
     # for name, values in (new_coords | old_coords).items():
@@ -209,6 +224,7 @@ def reprocess(dataset):
     #         })[measure] = dataset.sel({'deployment': deployment, 'time': time})[f'{datasource}-{leader_selection}-{metric}-{measure}']
     #     index += 1
     #     print(f"{index}/{len(matched_vars)}")
+    print("Reshaping done.")
     return new_dataset
 
 if __name__ == '__main__':
@@ -444,6 +460,7 @@ if __name__ == '__main__':
                             figname = f'{comparison_variable}_{current_metric}_{current_coordinate}_{beautified_value}{"_err" if withErrors else ""}'
                             for symbol in r".[]\/@:":
                                 figname = figname.replace(symbol, '_')
+                            print(f"Saving chart '{figname}.pdf'")
                             fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
                             plt.close(fig)
                 merge_variables = mergeable_variables - { current_coordinate }

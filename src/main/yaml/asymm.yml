@@ -25,4 +25,4 @@ deployments:
   programs: *gradient
   contents:
     molecule: grain
-    concentration: 100
+    concentration: 5

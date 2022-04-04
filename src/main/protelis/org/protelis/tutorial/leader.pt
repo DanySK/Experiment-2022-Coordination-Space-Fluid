@@ -55,16 +55,22 @@ public def localLeaderElection(uid, symmetryBreaker, radius, metric, distance) {
 public def localLeaderElectionWithGradient(symmetryBreaker, radius, metric) =
 	localLeaderElection(self.getDeviceUID().getId(), symmetryBreaker, radius, metric) { distanceToWithMetric(it, metric) }
 
+let mid = self.getDeviceUID().getId()
 let myNeighbors = foldSum(nbr(1))
+let range = nbrRange()
+let layerValue = env.get("layer", 0)
+let layerField = nbr(layerValue)
+let layerDiff = min(mux(mid == nbr(mid)) { 0 } else { 0.01 }, abs(layerValue - layerField))
 localLeaderElectionWithGradient(
     myNeighbors,
 	env.get("grain")
 ) {
-    let mid = self.getDeviceUID().getId()
-    mux(mid == nbr(mid)) { 0 } else { nbr(myNeighbors) * myNeighbors }
+    // let mid = self.getDeviceUID().getId()
+    // mux(mid == nbr(mid)) { 0 } else { nbr(myNeighbors) * myNeighbors }
 	// nbrRange()
 	/*
 	let diff = nbr(self.getCoordinates()) - self.getCoordinates()
 	hypot(diff.get(0), diff.get(1))
 	*/
+    mux (env.has("layer")) { range * layerDiff } else { mux(mid == nbr(mid)) { 0 } else { 0.01 * nbr(myNeighbors) * myNeighbors } }
 }

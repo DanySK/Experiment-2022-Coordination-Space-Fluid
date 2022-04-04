@@ -306,15 +306,18 @@ if __name__ == '__main__':
             except:
                 shouldRecompute = True
         if shouldRecompute:
+            print("No cache found. Reprocessing data. This operation will take time.")
             timefun = np.logspace if logarithmicTime else np.linspace
             means = {}
             stdevs = {}
             for experiment in experiments:
+                print(f"Processing experiment {experiment}")
                 # Collect all files for the experiment of interest
                 import fnmatch
                 allfiles = filter(lambda file: fnmatch.fnmatch(file, experiment + f'*_*.{extension}'), os.listdir(directory))
                 allfiles = [directory + '/' + name for name in allfiles]
                 allfiles.sort()
+                print(f"Found {len(allfiles)} files for experiment {experiment}")
                 # From the file name, extract the independent variables
                 dimensions = {}
                 for file in allfiles:
@@ -355,7 +358,7 @@ if __name__ == '__main__':
                     timeline = timefun(minTime, maxTime, timeSamples)
                     # Resample
                     for file in allData:
-    #                    print(file)
+                        print(f"Processing file {file}")
                         allData[file] = convert(timeColumn, timeline, allData[file])
                     # Populate the dataset
                     for file, data in allData.items():
@@ -366,11 +369,13 @@ if __name__ == '__main__':
                                 experimentVars = extractCoordinates(file)
                                 darray.loc[experimentVars] = data[:, idx].A1
                     # Fold the dataset along the seed variables, producing the mean and stdev datasets
+                    print("Folding data across seeds producing means and standard deviations")
                     mergingVariables = [seed for seed in seedVars if seed in dataset.coords]
                     means[experiment] = reprocess(dataset.mean(dim = mergingVariables, skipna=True))
                     stdevs[experiment] = reprocess(dataset.std(dim = mergingVariables, skipna=True))
 
             # Save the datasets
+            print("Creating a cache")
             pickle.dump(means, open(pickleOutput + '_mean', 'wb'), protocol=-1)
             pickle.dump(stdevs, open(pickleOutput + '_std', 'wb'), protocol=-1)
             pickle.dump(newestFileTime, open('timeprocessed', 'wb'))
@@ -471,6 +476,7 @@ if __name__ == '__main__':
                             figname = f'{comparison_variable}_{current_metric}_{current_coordinate}_{beautified_value}{"_err" if withErrors else ""}'
                             for symbol in r".[]\/@:":
                                 figname = figname.replace(symbol, '_')
+                            print(f"Saving chart '{figname}.pdf'")
                             fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
                             plt.close(fig)
 

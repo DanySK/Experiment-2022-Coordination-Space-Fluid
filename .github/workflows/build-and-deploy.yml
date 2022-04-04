@@ -47,6 +47,11 @@ jobs:
         uses: gabrielfalcao/pyenv-action@v9
         with:
           command: pyenv install
+      - name: Run pyenv install
+        run: |
+          python --version
+          pyenv install
+          python --version
       - name: Upgrade pip
         run: pip install --upgrade pip --user
       - name: Install requirements

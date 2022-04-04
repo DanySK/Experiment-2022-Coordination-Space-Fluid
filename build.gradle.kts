@@ -111,7 +111,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
         }
         val capitalizedName = it.nameWithoutExtension.capitalize()
         val graphic by basetask("run${capitalizedName}Graphic") {
-            if (isCI) maxHeapSize = "3g"
+            if (isCI) maxHeapSize = "3500m"
         }
         runAllGraphic.dependsOn(graphic)
         val batch by basetask("run${capitalizedName}Batch") {

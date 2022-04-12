@@ -77,8 +77,6 @@ def extractCoordinates(filename):
     ----------
     filename : str
         path to the target file
-    mergewith : dict
-        a dictionary whose dimensions will be merged with the returned one
 
     Returns
     -------
@@ -88,8 +86,8 @@ def extractCoordinates(filename):
 
     """
     with open(filename, 'r') as file:
-#        regex = re.compile(' (?P<varName>[a-zA-Z._-]+) = (?P<varValue>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),?')
-        regex = r"(?:^|_)\s*(?P<varName>[^-\s]+)-(?P<varValue>[^_\s]*)"
+        regex = re.compile('(?P<varName>[a-zA-Z._-]+) = (?P<varValue>.+?),?\s')
+#        regex = r"(?:^|_)\s*(?P<varName>[^-\s]+)-(?P<varValue>[^_\s]*)"
         dataBegin = r"\d"
         is_float = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
         for line in file:

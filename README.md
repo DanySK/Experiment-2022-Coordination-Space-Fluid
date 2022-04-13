@@ -7,6 +7,8 @@ This repository contains the experiments presented in the paper
 Accepted at [COORDINATION 2022](http://www.discotec.org/2022/coordination.html)
 realised with the [Protelis programming language](https://www.protelis.org) and the [Alchemist Simulator](https://github.com/AlchemistSimulator/Alchemist).
 
+Code and data are permanently archived on Zenodo for all the stable working versions of this repository: [![DOI](https://zenodo.org/badge/451919712.svg)](https://zenodo.org/badge/latestdoi/451919712)
+
 ## Prerequisites
 
 * A working version of Java, the supported version range is 8 to 17

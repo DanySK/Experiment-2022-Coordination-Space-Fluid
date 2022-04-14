@@ -1,0 +1,133 @@
+incarnation: protelis
+
+variables:
+  base:
+    language: kotlin
+    timeout: 10000
+    formula: |
+      mapOf(
+        "programs" to listOf(
+          mapOf("time-distribution" to 1, "program" to "org:protelis:tutorial:complete"),
+          mapOf("program" to "send"),
+        ),
+        "contents" to mapOf(
+          "molecule" to "grain",
+          "concentration" to 5,
+        )
+      )
+  arena_size:
+    formula: 10.0
+  expected_neighbors:
+    formula: 12.0
+  node_count: &node_count
+    formula: arena_size*arena_size
+    language: kotlin
+  range: &range
+    formula:
+      Math.sqrt(expected_neighbors * arena_size * arena_size / node_count / Math.PI)
+  uniform: &rectangle
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "Rectangle",
+        "parameters" to listOf(node_count, 0, 0, arena_size, arena_size),
+      )
+  regular_grid:
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "Grid",
+        "parameters" to mapOf(
+          "xStart" to 0,
+          "yStart" to 0,
+          "xEnd" to arena_size,
+          "yEnd" to arena_size,
+          "xStep" to 1,
+          "yStep" to 1,
+        ),
+      )
+  irregular_grid:
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "Grid",
+        "parameters" to mapOf(
+          "xStart" to 0,
+          "yStart" to 0,
+          "xEnd" to arena_size,
+          "yEnd" to arena_size,
+          "xStep" to 1,
+          "yStep" to 1,
+          "xRand" to 0.5,
+          "yRand" to 0.5,
+        ),
+      )
+  exponential:
+    language: kotlin
+    formula: |
+      base + mapOf(
+        "type" to "GeometricGradientRectangle",
+        "parameters" to listOf(
+          node_count, // final int nodes,
+          0, // final double x,
+          0, //  final double y,
+          arena_size, // final double sizex,
+          arena_size, // final double sizey,
+          0.3, // final double lambda,
+          100, // final int steps,
+          true, // final boolean horizontal,
+          true, // final boolean increasing
+        ),
+      )
+  deployment:
+    type: ArbitraryVariable
+    parameters: [exp, [grid, uniform, pgrid, exp]]
+  deployment_spec: &deployment_spec
+    formula: |
+      def specs = [
+        "exp": exponential,
+        "grid": regular_grid,
+        "pgrid": irregular_grid,
+        "uniform": uniform,
+      ]
+      specs[deployment]
+  seed:
+    default: 0
+    min: 0
+    step: 1
+    max: 99
+  simulation_seed: &simseed
+    language: kotlin
+    formula: kotlin.random.Random(seed.toLong()).nextLong()
+  scenario_seed: &scenseed
+    language: kotlin
+    formula: kotlin.random.Random(kotlin.random.Random(seed.toLong()).nextLong()).nextLong()
+
+seeds:
+  scenario: *scenseed
+  simulation: *simseed
+
+network-model:
+  type: ClosestN
+  parameters: [8, *node_count]
+
+_gradient: &gradient
+  - time-distribution: 1
+    program: org:protelis:tutorial:leader2
+  - program: send
+
+deployments: *deployment_spec
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "coord"
+      exportPath: "data"
+      interval: 1
+    data:
+      - time
+      - type: CoordDataEport
+
+terminate:
+  - type: AfterTime
+    parameters: 400

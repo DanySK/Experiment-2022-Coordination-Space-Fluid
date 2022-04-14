@@ -84,6 +84,29 @@ val runAllBatch by tasks.register<DefaultTask>("runAllBatch") {
     group = alchemistGroup
     description = "Launches all experiments"
 }
+
+fun Boolean.whenTrue(body: Boolean.() -> Unit) = this.also { if (this) { body() } }
+val jvmCrashes: List<File> = projectDir.listFiles()
+    ?.filter { file -> file.name.matches(Regex("^hs_err_pid\\d+.log$")) }
+    ?: emptyList()
+println("Previous JVM crashes have been detected. Scanning them for known bugs")
+val disableOpenGL = jvmCrashes.any { file ->
+    file.bufferedReader().lineSequence().any { line ->
+        line.contains("libnvidia-glcore").whenTrue {
+            val url = "https://github.com/adoptium/adoptium-support/issues/489"
+            println(
+                """
+                WARNING: a well-known bug with Linux and nVidia drivers occured in the past.
+                The full log is in ${file.name}.
+                Information on the bug and its solution is available at: $url
+                As a workaround, OpenGL acceleration will be disabled until the aforementioned crash report is deleted.
+                This could negatively impact performance.
+                """.trimIndent()
+            )
+        }
+    }
+}
+
 /*
  * Scan the folder with the simulation files, and create a task for each one of them.
  */
@@ -107,6 +130,9 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
                     languageVersion.set(JavaLanguageVersion.of(usesJvm))
                 }
             )
+            if (disableOpenGL) {
+                jvmArgs("-Dsun.java2d.opengl=false")
+            }
             this.additionalConfiguration()
         }
         val capitalizedName = it.nameWithoutExtension.capitalize()

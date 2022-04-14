@@ -75,3 +75,42 @@ pip install -r requirements.txt --user
 mkdir -p charts
 python process.py
 ```
+
+## Troubleshooting
+
+### Nvidia drivers and OpenGL acceleration
+
+The simulator uses accelerated 2D graphics to speed up the rendering.
+In some environments, this caused nVidia drivers to fail.
+The program output looks like:
+
+```
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f5a656cef50, pid=36254, tid=36500
+#
+# JRE version: OpenJDK Runtime Environment Temurin-17+35 (17.0+35) (build 17+35)
+# Java VM: OpenJDK 64-Bit Server VM Temurin-17+35 (17+35, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-amd64)
+# Problematic frame:
+# C  [libnvidia-glcore.so.510.54+0xecef50]
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h" (or dumping to /home/danysk/LocalProjects/Experiment-2022-Coordination-Space-Fluid/core.36254)
+#
+# An error report file with more information is saved as:
+# /home/danysk/LocalProjects/Experiment-2022-Coordination-Space-Fluid/hs_err_pid36254.log
+#
+# If you would like to submit a bug report, please visit:
+#   https://github.com/adoptium/adoptium-support/issues
+# The crash happened outside the Java Virtual Machine in native code.
+# See problematic frame for where to report the bug.
+#
+```
+
+Unfortunately, there is not much that can be done, besides disabling OpenGL in these cases.
+The experiment has been configured to do so by searching for a local JVM crash report
+(a file named `hs_err_pid<pid>.log`)
+containing nvidia-glcore references.
+
+Consequently, re-launching after such an error *disables OpenGL* and runs normally.
+It worked in our testbeds

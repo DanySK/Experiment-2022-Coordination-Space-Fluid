@@ -44,7 +44,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install python version
-        uses: gabrielfalcao/pyenv-action@v9
+        uses: gabrielfalcao/pyenv-action@v10
         with:
           command: pyenv install
       - name: Run pyenv install

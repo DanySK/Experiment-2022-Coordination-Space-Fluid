@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-find charts/**/*.pdf -exec pdfcrop {} & \;
+find charts -name '*.pdf' -exec sh -c 'pdfcrop $1 &' shell {} \;

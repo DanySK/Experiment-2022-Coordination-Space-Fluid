@@ -227,6 +227,7 @@ def reprocess(dataset):
 
 if __name__ == '__main__':
     # CONFIGURE SCRIPT
+    line_styles = ['-', '--', '-.', ':', ]
     # Where to find Alchemist data files
     directory = 'data'
     # Where to save charts
@@ -404,7 +405,7 @@ if __name__ == '__main__':
     import matplotlib.cm as cmx
     matplotlib.rcParams.update({'axes.titlesize': 12})
     matplotlib.rcParams.update({'axes.labelsize': 10})
-    def make_line_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
+    def make_line_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 2, errlinewidth = 0.5, figure_size = (6, 3)):
         fig = plt.figure(figsize = figure_size)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title)
@@ -415,7 +416,7 @@ if __name__ == '__main__':
         index = 0
         for (label, (data, error)) in ydata.items():
 #            print(f'plotting {data}\nagainst {xdata}')
-            lines = ax.plot(xdata, data, label=label, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=linewidth)
+            lines = ax.plot(xdata, data, label=label, color=colors(index / (len(ydata) - 1)) if colors else None, linewidth=linewidth, linestyle=line_styles[index % len(line_styles)])
             index += 1
             if error is not None:
                 last_color = lines[-1].get_color()
@@ -444,7 +445,7 @@ if __name__ == '__main__':
                                 ydata = {
                                     beautifyValue(label): (
                                         merge_data_view.sel(selector)[current_metric],
-                                        merge_error_view.sel(selector)[current_metric] if withErrors else 0
+                                        merge_error_view.sel(selector)[current_metric] if withErrors else None
                                     )
                                     for label in merge_data_view[comparison_variable].values
                                     for selector in [{comparison_variable: label, current_coordinate: current_coordinate_value}]

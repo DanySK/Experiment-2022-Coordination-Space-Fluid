@@ -63,7 +63,7 @@ jobs:
       - name: Generate archive
         run: tar --use-compress-program zstd -cf charts.tar.zst charts/
       - uses: ncipollo/release-action@v1.10.0
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
         name: Create GitHub Release
         with:
           tag: ${{ needs.compute-version.outputs.version }}
